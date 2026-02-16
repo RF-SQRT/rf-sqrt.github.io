@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQRT // ABOUT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --amber: #ffb000;
+            --amber-bright: #ffc832;
+            --amber-dim: #cc8800;
+            --amber-dark: #664400;
+            --amber-glow: #ffb00066;
+            --bg: #0a0800;
+            --bg-light: #1a1200;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Share Tech Mono', 'Courier New', monospace;
+            background-color: var(--bg);
+            color: var(--amber);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* CRT Effect */
+        .crt {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10000;
+        }
+
+        .crt::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.3) 2px,
+                rgba(0, 0, 0, 0.3) 4px
+            );
+        }
+
+        .crt::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.4) 100%);
+        }
+
+        /* Container */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        /* Back link */
+        .back-link {
+            display: inline-block;
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+            color: var(--amber-dim);
+            text-decoration: none;
+            margin-bottom: 3rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--amber);
+            text-shadow: 0 0 10px var(--amber-glow);
+        }
+
+        /* Profile section */
+        .profile {
+            display: flex;
+            gap: 3rem;
+            align-items: flex-start;
+        }
+
+        @media (max-width: 600px) {
+            .profile {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        .profile-image {
+            width: 200px;
+            height: 200px;
+            border: 2px solid var(--amber-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 176, 0, 0.02);
+            flex-shrink: 0;
+        }
+
+        .profile-image span {
+            font-family: 'VT323', monospace;
+            font-size: 8rem;
+            color: var(--amber-dark);
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .profile-name {
+            font-family: 'VT323', monospace;
+            font-size: 2.5rem;
+            color: var(--amber);
+            text-shadow: 0 0 10px var(--amber-glow);
+            margin-bottom: 1rem;
+        }
+
+        .profile-title {
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+            color: var(--amber-dim);
+            margin-bottom: 2rem;
+            letter-spacing: 2px;
+        }
+
+        .profile-bio {
+            color: var(--amber-dim);
+            line-height: 1.8;
+            font-size: 0.95rem;
+        }
+
+        .profile-bio p {
+            margin-bottom: 1rem;
+        }
+
+        /* Interests */
+        .interests {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--amber-dark);
+        }
+
+        .interests-header {
+            font-family: 'VT323', monospace;
+            font-size: 1.5rem;
+            color: var(--amber);
+            margin-bottom: 1rem;
+        }
+
+        .interests-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .interest-tag {
+            font-size: 0.85rem;
+            padding: 0.3rem 0.8rem;
+            border: 1px solid var(--amber-dark);
+            color: var(--amber-dim);
+            background: rgba(255, 176, 0, 0.02);
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--amber-dark);
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            font-family: 'VT323', monospace;
+            font-size: 1.1rem;
+        }
+
+        .footer-links a {
+            color: var(--amber-dim);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--amber);
+            text-shadow: 0 0 10px var(--amber-glow);
+        }
+
+        /* Uptime */
+        .uptime {
+            margin-top: 1.5rem;
+            font-family: 'VT323', monospace;
+            font-size: 0.9rem;
+            color: var(--amber-dark);
+        }
+
+        .uptime span {
+            color: var(--amber-dim);
+        }
+
+        /* Flicker */
+        .flicker {
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            50% { opacity: 1; }
+            100% { opacity: 0.98; }
+        }
+    </style>
+</head>
+<body>
+    <div class="crt"></div>
+
+    <div class="container flicker">
+        <a href="index.html" class="back-link">← BACK TO MAIN</a>
+
+        <div class="profile">
+            <div class="profile-image">
+                <span>?</span>
+            </div>
+            <div class="profile-info">
+                <h1 class="profile-name">SQRT</h1>
+                <p class="profile-title">SECURITY RESEARCHER</p>
+                <div class="profile-bio">
+                    <p>Security researcher with a focus on IP and RF exploitation. Building tools, breaking systems, and sharing knowledge.</p>
+                    <p>Currently exploring the intersection of network security and radio frequency research. Interested in how signals move through both wired and wireless mediums.</p>
+                    <p>Based somewhere with good coffee and bad sleep schedules.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="interests">
+            <h2 class="interests-header">> INTERESTS</h2>
+            <div class="interests-list">
+                <span class="interest-tag">Penetration Testing</span>
+                <span class="interest-tag">SDR</span>
+                <span class="interest-tag">Signal Analysis</span>
+                <span class="interest-tag">SIGINT</span>
+                <span class="interest-tag">Tool Development</span>
+                <span class="interest-tag">Reverse Engineering</span>
+                <span class="interest-tag">OSINT</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="footer-links">
+                <a href="#">[GITHUB]</a>
+                <a href="#">[CONTACT]</a>
+            </div>
+            <div class="uptime">
+                UPTIME: <span id="uptime">000:00:00:00</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // IRIG-B TIME FORMAT (DDD:HH:MM:SS - day of year)
+        function updateUptime() {
+            const now = new Date();
+            const start = new Date(now.getFullYear(), 0, 0);
+            const diff = now - start;
+            const oneDay = 1000 * 60 * 60 * 24;
+            const dayOfYear = Math.floor(diff / oneDay);
+
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+
+            const pad = (n, len = 2) => String(n).padStart(len, '0');
+            document.getElementById('uptime').textContent = 
+                `${pad(dayOfYear, 3)}:${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+        }
+
+        updateUptime();
+        setInterval(updateUptime, 1000);
+    </script>
+</body>
+</html>

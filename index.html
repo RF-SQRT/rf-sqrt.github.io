@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQRT // ACCESS GRANTED</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --amber: #ffb000;
+            --amber-bright: #ffc832;
+            --amber-dim: #cc8800;
+            --amber-dark: #664400;
+            --amber-glow: #ffb00066;
+            --bg: #0a0800;
+            --bg-light: #1a1200;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Share Tech Mono', 'Courier New', monospace;
+            background-color: var(--bg);
+            color: var(--amber);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* HEAVY CRT EFFECT */
+        .crt {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10000;
+        }
+
+        .crt::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.3) 2px,
+                rgba(0, 0, 0, 0.3) 4px
+            );
+        }
+
+        .crt::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.4) 100%);
+        }
+
+        /* GLITCH OVERLAY */
+        .glitch-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            animation: glitchOverlay 8s infinite;
+        }
+
+        @keyframes glitchOverlay {
+            0%, 95%, 100% { opacity: 0; }
+            96% { 
+                opacity: 1;
+                background: linear-gradient(
+                    90deg,
+                    transparent 0%,
+                    rgba(255, 176, 0, 0.03) 15%,
+                    transparent 15%,
+                    transparent 50%,
+                    rgba(255, 176, 0, 0.02) 50%,
+                    rgba(255, 176, 0, 0.02) 51%,
+                    transparent 51%
+                );
+                transform: translateX(-5px);
+            }
+            97% {
+                opacity: 1;
+                background: linear-gradient(
+                    90deg,
+                    transparent 20%,
+                    rgba(255, 176, 0, 0.05) 20%,
+                    rgba(255, 176, 0, 0.05) 21%,
+                    transparent 21%,
+                    transparent 80%,
+                    rgba(255, 176, 0, 0.03) 80%
+                );
+                transform: translateX(3px);
+            }
+        }
+
+        /* SCREEN FLICKER */
+        .flicker {
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            50% { opacity: 1; }
+            100% { opacity: 0.98; }
+        }
+
+        /* BOOT SEQUENCE */
+        .boot-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            z-index: 100000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-family: 'VT323', monospace;
+        }
+
+        .boot-screen.hidden {
+            display: none;
+        }
+
+        .boot-text {
+            color: var(--amber);
+            font-size: 1.2rem;
+            text-align: left;
+            max-width: 600px;
+            text-shadow: 0 0 10px var(--amber-glow);
+        }
+
+        .boot-line {
+            opacity: 0;
+            animation: bootLine 0.1s forwards;
+        }
+
+        @keyframes bootLine {
+            to { opacity: 1; }
+        }
+
+        /* MATRIX CANVAS */
+        #matrix {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            position: relative;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .main-content.visible {
+            opacity: 1;
+        }
+
+        /* TOP BAR */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(180deg, var(--bg) 0%, transparent 100%);
+            z-index: 1000;
+            font-family: 'VT323', monospace;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--amber-dark);
+        }
+
+        .sys-info {
+            color: var(--amber-dim);
+        }
+
+        .sys-time {
+            color: var(--amber);
+        }
+
+        /* LIVE TERMINAL */
+        .live-terminal {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(0deg, var(--bg) 70%, transparent 100%);
+            z-index: 1000;
+            padding: 1rem 2rem;
+            font-family: 'VT323', monospace;
+            font-size: 0.85rem;
+            overflow: hidden;
+            border-top: 1px solid var(--amber-dark);
+        }
+
+        .spectrum-display {
+            display: none;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid var(--amber-dark);
+            background: rgba(0, 0, 0, 0.3);
+            height: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .spectrum-display.active {
+            display: block;
+        }
+
+        .spectrum-label {
+            position: absolute;
+            top: 4px;
+            left: 8px;
+            font-size: 0.7rem;
+            color: var(--amber);
+            z-index: 10;
+        }
+
+        .spectrum-freq {
+            position: absolute;
+            bottom: 4px;
+            right: 8px;
+            font-size: 0.7rem;
+            color: var(--amber-dim);
+        }
+
+        .waveform {
+            position: absolute;
+            bottom: 15px;
+            left: 0;
+            width: 100%;
+            height: 35px;
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+        }
+
+        .waveform-bar {
+            flex: 1;
+            background: var(--amber);
+            min-width: 3px;
+            box-shadow: 0 0 5px var(--amber-glow);
+            transition: height 0.1s ease;
+        }
+
+        .terminal-output {
+            color: var(--amber-dim);
+            line-height: 1.4;
+            white-space: pre-wrap;
+            font-size: 0.8rem;
+        }
+
+        .terminal-output .cmd {
+            color: var(--amber);
+        }
+
+        .terminal-output .success {
+            color: var(--amber-bright);
+        }
+
+        .terminal-output .warn {
+            color: var(--amber);
+        }
+
+        /* CONTAINER */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 4rem 2rem 10rem;
+        }
+
+        /* GLITCH TEXT */
+        .glitch {
+            position: relative;
+            font-family: 'VT323', monospace;
+            font-size: 4rem;
+            color: var(--amber);
+            text-shadow: 0 0 20px var(--amber-glow);
+            animation: textFlicker 3s infinite;
+        }
+
+        .glitch::before,
+        .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .glitch::before {
+            animation: glitch1 2s infinite;
+            clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+            transform: translate(-2px);
+            opacity: 0.8;
+        }
+
+        .glitch::after {
+            animation: glitch2 2s infinite;
+            clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+            transform: translate(2px);
+            opacity: 0.8;
+        }
+
+        @keyframes glitch1 {
+            0%, 90%, 100% { transform: translate(0); }
+            92% { transform: translate(-5px, 2px); }
+            94% { transform: translate(5px, -2px); }
+            96% { transform: translate(-3px); }
+        }
+
+        @keyframes glitch2 {
+            0%, 90%, 100% { transform: translate(0); }
+            91% { transform: translate(5px, 1px); }
+            93% { transform: translate(-5px, -1px); }
+            95% { transform: translate(2px, 2px); }
+        }
+
+        @keyframes textFlicker {
+            0%, 100% { opacity: 1; }
+            92% { opacity: 1; }
+            93% { opacity: 0.8; }
+            94% { opacity: 1; }
+            95% { opacity: 0.9; }
+        }
+
+        /* HERO */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 2rem 0;
+        }
+
+        .hero-ascii {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.5rem;
+            line-height: 1;
+            color: var(--amber-dim);
+            white-space: pre;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 5px var(--amber-glow);
+            animation: asciiPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes asciiPulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .hero-subtitle {
+            font-family: 'VT323', monospace;
+            font-size: 1.5rem;
+            color: var(--amber-dim);
+            margin-top: 1rem;
+            letter-spacing: 4px;
+        }
+
+        .access-granted {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--amber);
+            margin-top: 2rem;
+            animation: borderPulse 2s infinite;
+        }
+
+        @keyframes borderPulse {
+            0%, 100% { box-shadow: 0 0 5px var(--amber-glow), inset 0 0 5px var(--amber-glow); }
+            50% { box-shadow: 0 0 20px var(--amber-glow), inset 0 0 10px var(--amber-glow); }
+        }
+
+        /* SECTIONS */
+        section {
+            padding: 4rem 0;
+        }
+
+        .section-header {
+            font-family: 'VT323', monospace;
+            font-size: 2rem;
+            color: var(--amber);
+            margin-bottom: 2rem;
+            text-shadow: 0 0 10px var(--amber-glow);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .section-header::before {
+            content: '>';
+            animation: cursorBlink 1s infinite;
+        }
+
+        @keyframes cursorBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .section-header::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--amber-dim), transparent);
+        }
+
+        /* ABOUT */
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .about-grid { grid-template-columns: 1fr; }
+        }
+
+        .about-text {
+            color: var(--amber-dim);
+            line-height: 1.8;
+            font-size: 0.95rem;
+        }
+
+        .stats-box {
+            border: 1px solid var(--amber-dark);
+            padding: 1.5rem;
+            background: rgba(255, 176, 0, 0.02);
+        }
+
+        .stat-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--amber-dark);
+            font-family: 'VT323', monospace;
+        }
+
+        .stat-line:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: var(--amber-dim);
+        }
+
+        .stat-value {
+            color: var(--amber);
+        }
+
+        /* TOOLS */
+        .tools-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            background: var(--amber-dark);
+            border: 1px solid var(--amber-dark);
+        }
+
+        .tool-item {
+            background: var(--bg);
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .tool-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+        }
+
+        .tool-item:hover {
+            background: rgba(255, 176, 0, 0.05);
+        }
+
+        .tool-item:hover .tool-meta {
+            color: var(--amber);
+        }
+
+        .tool-item.coming-soon {
+            opacity: 0.6;
+            cursor: default;
+        }
+
+        .tool-item.coming-soon .tool-name {
+            color: var(--amber-dim);
+        }
+
+        .tool-item.coming-soon .tool-meta {
+            color: var(--amber-dark);
+            font-style: italic;
+        }
+
+        .tool-name {
+            font-family: 'VT323', monospace;
+            font-size: 1.5rem;
+            color: var(--amber);
+        }
+
+        .tool-desc {
+            color: var(--amber-dim);
+            font-size: 0.9rem;
+        }
+
+        .tool-meta {
+            font-family: 'VT323', monospace;
+            color: var(--amber-dark);
+            font-size: 0.9rem;
+        }
+
+        /* TOOLS USED */
+        .tools-used-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--amber-dark);
+        }
+
+        .tools-used-header {
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+            color: var(--amber-dim);
+            margin-bottom: 1rem;
+        }
+
+        .tools-used {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .tool-used-item {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.8rem;
+            padding: 0.3rem 0.6rem;
+            border: 1px solid var(--amber-dark);
+            color: var(--amber-dim);
+            background: rgba(255, 176, 0, 0.02);
+            transition: all 0.3s ease;
+        }
+
+        .tool-used-item:hover {
+            border-color: var(--amber);
+            color: var(--amber);
+            background: rgba(255, 176, 0, 0.05);
+        }
+
+        /* WRITEUPS */
+        .writeups-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .writeup-item {
+            padding: 1rem;
+            border-left: 3px solid var(--amber-dark);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .writeup-item:hover {
+            border-left-color: var(--amber);
+            background: rgba(255, 176, 0, 0.03);
+            padding-left: 1.5rem;
+        }
+
+        .writeup-date {
+            font-family: 'VT323', monospace;
+            color: var(--amber-dark);
+            font-size: 0.9rem;
+        }
+
+        .writeup-title {
+            font-family: 'VT323', monospace;
+            font-size: 1.3rem;
+            color: var(--amber);
+            margin: 0.25rem 0;
+        }
+
+        .writeup-tags {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border: 1px solid var(--amber-dark);
+            color: var(--amber-dim);
+        }
+
+        /* FOOTER */
+        footer {
+            padding: 4rem 0 8rem;
+            text-align: center;
+            border-top: 1px solid var(--amber-dark);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-bottom: 2rem;
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+        }
+
+        .footer-links a {
+            color: var(--amber-dim);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--amber);
+            text-shadow: 0 0 10px var(--amber-glow);
+        }
+
+        .pgp-key {
+            font-size: 0.8rem;
+            color: var(--amber-dark);
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .uptime {
+            margin-top: 1rem;
+            font-family: 'VT323', monospace;
+            font-size: 0.9rem;
+            color: var(--amber-dark);
+        }
+
+        .uptime span {
+            color: var(--amber-dim);
+        }
+
+        /* RANDOM DATA STREAM (side decoration) */
+        .data-stream {
+            position: fixed;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.6rem;
+            color: var(--amber-dark);
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            opacity: 0.3;
+            z-index: 50;
+            pointer-events: none;
+        }
+
+        /* NAV LINKS */
+        .nav-links {
+            position: fixed;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            z-index: 1000;
+        }
+
+        .nav-links a {
+            font-family: 'VT323', monospace;
+            font-size: 1rem;
+            color: var(--amber-dark);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+
+        .nav-links a:hover {
+            color: var(--amber);
+            text-shadow: 0 0 10px var(--amber-glow);
+        }
+
+        @media (max-width: 900px) {
+            .nav-links, .data-stream { display: none; }
+        }
+
+        /* SCAN LINE ANIMATION */
+        .scan-line {
+            position: fixed;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(180deg, transparent, var(--amber-glow), transparent);
+            z-index: 9998;
+            animation: scanMove 6s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes scanMove {
+            0% { top: -10px; }
+            100% { top: 100vh; }
+        }
+
+        /* PILL CHOICE SCREEN */
+        .pill-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease;
+        }
+
+        .pill-screen.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .pill-screen.hidden {
+            display: none;
+        }
+
+        .pill-container {
+            text-align: center;
+        }
+
+        .pill-ascii {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.45rem;
+            line-height: 1;
+            color: var(--amber-dim);
+            white-space: pre;
+            margin-bottom: 3rem;
+            text-shadow: 0 0 5px var(--amber-glow);
+        }
+
+        .pill-prompt {
+            font-family: 'VT323', monospace;
+            font-size: 2.5rem;
+            color: var(--amber);
+            text-shadow: 0 0 20px var(--amber-glow);
+            margin-bottom: 3rem;
+            letter-spacing: 8px;
+            animation: textFlicker 3s infinite;
+        }
+
+        .pill-choices {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3rem;
+        }
+
+        .pill {
+            cursor: pointer;
+            padding: 2rem;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .pill:hover {
+            border-color: var(--amber-dim);
+            background: rgba(255, 176, 0, 0.03);
+        }
+
+        .pill-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            filter: grayscale(100%) brightness(1.5);
+            transition: all 0.3s ease;
+        }
+
+        .pill:hover .pill-icon {
+            filter: grayscale(0%) brightness(1);
+            transform: scale(1.1);
+        }
+
+        .blue-pill:hover .pill-icon {
+            text-shadow: 0 0 30px rgba(0, 153, 255, 0.8);
+        }
+
+        .red-pill:hover .pill-icon {
+            text-shadow: 0 0 30px rgba(255, 51, 51, 0.8);
+        }
+
+        .pill-label {
+            font-family: 'VT323', monospace;
+            font-size: 1.5rem;
+            color: var(--amber);
+            margin-bottom: 0.5rem;
+        }
+
+        .pill-desc {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--amber-dim);
+        }
+
+        .pill-or {
+            font-family: 'VT323', monospace;
+            font-size: 1.5rem;
+            color: var(--amber-dark);
+        }
+
+        .pill-hint {
+            margin-top: 3rem;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--amber-dark);
+            animation: cursorBlink 1s infinite;
+        }
+
+        /* MODE INDICATOR */
+        .mode-indicator {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'VT323', monospace;
+            font-size: 1rem;
+            padding: 0.5rem 1.5rem;
+            border: 1px solid;
+            z-index: 1001;
+            letter-spacing: 2px;
+        }
+
+        .mode-indicator.blue-mode {
+            color: #0099ff;
+            border-color: #0099ff;
+            background: rgba(0, 153, 255, 0.1);
+            text-shadow: 0 0 10px rgba(0, 153, 255, 0.5);
+        }
+
+        .mode-indicator.red-mode {
+            color: #ff3333;
+            border-color: #ff3333;
+            background: rgba(255, 51, 51, 0.1);
+            text-shadow: 0 0 10px rgba(255, 51, 51, 0.5);
+        }
+
+        .switch-mode {
+            position: fixed;
+            top: 60px;
+            right: 2rem;
+            font-family: 'VT323', monospace;
+            font-size: 0.9rem;
+            padding: 0.4rem 1rem;
+            background: transparent;
+            border: 1px solid var(--amber-dark);
+            color: var(--amber-dim);
+            cursor: pointer;
+            z-index: 1001;
+            transition: all 0.3s ease;
+        }
+
+        .switch-mode:hover {
+            border-color: var(--amber);
+            color: var(--amber);
+            text-shadow: 0 0 10px var(--amber-glow);
+            box-shadow: 0 0 15px var(--amber-glow);
+        }
+    </style>
+</head>
+<body>
+    <!-- BOOT SEQUENCE -->
+    <div class="boot-screen" id="bootScreen">
+        <div class="boot-text" id="bootText"></div>
+    </div>
+
+    <!-- PATH CHOICE SCREEN -->
+    <div class="pill-screen" id="pillScreen">
+        <div class="pill-container">
+            <div class="pill-ascii" id="pillAscii"></div>
+            <div class="pill-prompt">HOW DO YOU HACK?</div>
+            <div class="pill-choices">
+                <div class="pill blue-pill" id="bluePill">
+                    <div class="pill-icon">🖧</div>
+                    <div class="pill-label">SEND PACKETS</div>
+                    <div class="pill-desc"></div>
+                </div>
+                <div class="pill-or">OR</div>
+                <div class="pill red-pill" id="redPill">
+                    <div class="pill-icon">📡</div>
+                    <div class="pill-label">DECODE SIGNALS</div>
+                    <div class="pill-desc"></div>
+                </div>
+            </div>
+            <div class="pill-hint">// CHOOSE WISELY</div>
+        </div>
+    </div>
+
+    <!-- CRT EFFECTS -->
+    <div class="crt"></div>
+    <div class="glitch-overlay"></div>
+    <div class="scan-line"></div>
+
+    <!-- MATRIX BACKGROUND -->
+    <canvas id="matrix"></canvas>
+
+    <!-- LIVE TERMINAL -->
+    <div class="live-terminal">
+        <div class="terminal-output" id="liveTerminal"></div>
+        <div class="spectrum-display" id="spectrumDisplay">
+            <span class="spectrum-label" id="spectrumLabel">GPS L1</span>
+            <span class="spectrum-freq" id="spectrumFreq">1575.42 MHz</span>
+            <div class="waveform" id="waveform"></div>
+        </div>
+    </div>
+
+    <!-- TOP BAR -->
+    <div class="top-bar">
+        <span class="sys-info">SYS:<span id="sysLoad">0.42</span> | MEM:<span id="memUsage">2.1GB</span> | NET:ACTIVE</span>
+        <span class="sys-time" id="sysTime">00:00:00</span>
+    </div>
+
+    <!-- DATA STREAM -->
+    <div class="data-stream" id="dataStream"></div>
+
+    <!-- NAV -->
+    <nav class="nav-links">
+        <a href="#tools">[TOOLS]</a>
+        <a href="#writeups">[WRITEUPS]</a>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content flicker" id="mainContent">
+        <div class="mode-indicator" id="modeIndicator"></div>
+        <button class="switch-mode" id="switchMode">[ SWITCH PATH ]</button>
+        <div class="container">
+            <!-- HERO -->
+            <section class="hero">
+                <div class="hero-ascii" id="asciiArt"></div>
+                <p class="hero-subtitle">SECURITY RESEARCHER // TOOL DEVELOPER</p>
+                <div class="access-granted">
+                    <span style="color: var(--amber-bright);">▶</span> ACCESS GRANTED — CLEARANCE LEVEL: ROOT
+                </div>
+            </section>
+
+            <!-- TOOLS -->
+            <section id="tools">
+                <h2 class="section-header">TOOLS</h2>
+                <div class="tools-list">
+                    <div class="tool-item">
+                        <span class="tool-name">RECON-NG</span>
+                        <span class="tool-desc">Automated reconnaissance framework for target enumeration and OSINT gathering</span>
+                        <span class="tool-meta">[PYTHON]</span>
+                    </div>
+                    <div class="tool-item">
+                        <span class="tool-name">PAYLOAD-FORGE</span>
+                        <span class="tool-desc">Dynamic payload generation with encoding chains and WAF bypass techniques</span>
+                        <span class="tool-meta">[GO]</span>
+                    </div>
+                    <div class="tool-item">
+                        <span class="tool-name">API-HUNTER</span>
+                        <span class="tool-desc">API endpoint discovery and authentication testing automation</span>
+                        <span class="tool-meta">[PYTHON]</span>
+                    </div>
+                    <div class="tool-item">
+                        <span class="tool-name">LOG-PARSER</span>
+                        <span class="tool-desc">Security log analysis with IOC extraction and timeline reconstruction</span>
+                        <span class="tool-meta">[BASH/PYTHON]</span>
+                    </div>
+                </div>
+                <div class="tools-used-section">
+                    <h3 class="tools-used-header">> TOOLS USED</h3>
+                    <div class="tools-used"></div>
+                </div>
+            </section>
+
+            <!-- WRITEUPS -->
+            <section id="writeups">
+                <h2 class="section-header">WRITEUPS</h2>
+                <div class="writeups-list">
+                    <div class="writeup-item">
+                        <span class="writeup-date">2024.12.15</span>
+                        <div class="writeup-title">BYPASSING RATE LIMITS VIA RACE CONDITIONS</div>
+                        <div class="writeup-tags">
+                            <span class="tag">WEB</span>
+                            <span class="tag">RACE CONDITION</span>
+                        </div>
+                    </div>
+                    <div class="writeup-item">
+                        <span class="writeup-date">2024.11.28</span>
+                        <div class="writeup-title">HIDDEN API ENDPOINTS: A FUZZING APPROACH</div>
+                        <div class="writeup-tags">
+                            <span class="tag">API</span>
+                            <span class="tag">FUZZING</span>
+                        </div>
+                    </div>
+                    <div class="writeup-item">
+                        <span class="writeup-date">2024.10.05</span>
+                        <div class="writeup-title">CVE-2024-XXXXX: AUTH BYPASS IN [REDACTED]</div>
+                        <div class="writeup-tags">
+                            <span class="tag">CVE</span>
+                            <span class="tag">AUTH BYPASS</span>
+                        </div>
+                    </div>
+                    <div class="writeup-item">
+                        <span class="writeup-date">2024.09.12</span>
+                        <div class="writeup-title">EXPLOITING DESERIALIZATION IN JAVA APPS</div>
+                        <div class="writeup-tags">
+                            <span class="tag">JAVA</span>
+                            <span class="tag">DESERIALIZATION</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FOOTER -->
+            <footer>
+                <div class="footer-links">
+                    <a href="#">[GITHUB]</a>
+                    <a href="about.html">[ABOUT]</a>
+                    <a href="#">[CONTACT]</a>
+                </div>
+                <div class="pgp-key">
+                    PGP: XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX
+                </div>
+                <div class="uptime">
+                    UPTIME: <span id="uptimeCounter">000:00:00:00</span>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // ELEMENTS
+        const bootText = document.getElementById('bootText');
+        const bootScreen = document.getElementById('bootScreen');
+        const pillScreen = document.getElementById('pillScreen');
+        const mainContent = document.getElementById('mainContent');
+        const modeIndicator = document.getElementById('modeIndicator');
+
+        // BOOT SEQUENCE
+        const bootMessages = [
+            'BIOS v3.31.2 — SYSTEM CHECK',
+            'MEMORY TEST... 32768MB OK',
+            'DETECTING HARDWARE...',
+            '  > CPU: AMD Ryzen 9 7950X @ 5.7GHz',
+            '  > GPU: NVIDIA RTX 4090 [CUDA ENABLED]',
+            '  > STORAGE: 4TB NVMe [ENCRYPTED]',
+            '  > NETWORK: 10GbE [ACTIVE]',
+            '  > SDR: HackRF One [DETECTED]',
+            '  > SDR: RTL-SDR v3 [DETECTED]',
+            'LOADING KERNEL...',
+            'MOUNTING ENCRYPTED VOLUMES...',
+            'INITIALIZING DOCKER CONTAINERS...',
+            '  > exegol ............... [OK]',
+            '  > rf-swift ............. [OK]',
+            'LOADING OFFENSIVE TOOLKIT...',
+            '  > nmap 7.94 ............ [OK]',
+            '  > burpsuite 2024.1 ..... [OK]',
+            '  > gnuradio 3.10 ........ [OK]',
+            '  > custom_tools ......... [OK]',
+            'ESTABLISHING SECURE CHANNELS...',
+            'ANONYMITY CHECK: [████████████] PASS',
+            '',
+            '================================================',
+            '  WELCOME BACK, SQRT',
+            '  SYSTEM READY — SELECT YOUR PATH',
+            '================================================',
+            ''
+        ];
+
+        async function runBoot() {
+            for (let i = 0; i < bootMessages.length; i++) {
+                const line = document.createElement('div');
+                line.className = 'boot-line';
+                line.style.animationDelay = `${i * 0.05}s`;
+                line.textContent = bootMessages[i];
+                bootText.appendChild(line);
+                await new Promise(r => setTimeout(r, 80));
+            }
+            await new Promise(r => setTimeout(r, 800));
+            bootScreen.classList.add('hidden');
+            
+            // Show pill choice
+            pillScreen.classList.add('visible');
+            document.getElementById('pillAscii').textContent = pillAsciiArt;
+        }
+
+        runBoot();
+
+        // PILL ASCII ART
+        const pillAsciiArt = ``;
+
+        // PILL SELECTION
+        const bluePill = document.getElementById('bluePill');
+        const redPill = document.getElementById('redPill');
+
+        // CONTENT FOR EACH MODE
+        const blueContent = {
+            subtitle: 'IP SECURITY RESEARCHER',
+            about: `<p>Network security specialist focused on IP-based attacks, penetration testing, and infrastructure exploitation.</p>
+                    <br>
+                    <p>I map networks. I find entry points. I build tools that automate reconnaissance and exploitation of TCP/IP vulnerabilities.</p>
+                    <br>
+                    <p>Specializing in web app security, API exploitation, network pivoting, and custom scanner development.</p>`,
+            tools: [
+                { name: '[REDACTED]', lang: 'COMING SOON', link: '#' },
+                { name: '[REDACTED]', lang: 'COMING SOON', link: '#' },
+                { name: '[REDACTED]', lang: 'COMING SOON', link: '#' },
+                { name: '[REDACTED]', lang: 'COMING SOON', link: '#' }
+            ],
+            toolsUsed: [
+                'nmap', 'rustscan', 'crackmapexec', 'impacket', 'bloodhound',
+                'ffuf', 'gobuster', 'metasploit', 'hashcat', 'wireshark', 'netcat'
+            ],
+            writeups: [
+                { date: 'TBD', title: '[WRITEUPS COMING SOON]', tags: [] }
+            ],
+            terminalCmds: [
+                { cmd: 'exegol start pentest', out: '[+] Container started — exegol-pentest', spectrum: null },
+                { cmd: 'nmap -sV -sC 10.0.0.0/24', out: 'Scanning 254 hosts... 47 alive, 183 ports open', spectrum: null },
+                { cmd: 'curl -s https://api.target.com/v1/users', out: '200 OK — 4,231 records leaked', spectrum: null },
+                { cmd: 'crackmapexec smb 10.0.0.0/24', out: '[+] 10.0.0.12:445 — Windows Server 2019', spectrum: null },
+                { cmd: 'gobuster dir -u https://target.com', out: '/admin /api /backup /config /.git', spectrum: null },
+                { cmd: 'impacket-secretsdump admin@10.0.0.12', out: '[*] Dumping LSA Secrets... Administrator:500:aad3b...', spectrum: null },
+                { cmd: 'bloodhound-python -d corp.local', out: '[+] Found 2,847 users, 142 groups, 23 computers', spectrum: null },
+                { cmd: 'hashcat -m 1000 hashes.txt rockyou.txt', out: 'Recovered: 847/1000 (84.7%)', spectrum: null }
+            ],
+        };
+
+        const redContent = {
+            subtitle: 'RF SECURITY RESEARCHER',
+            about: `<p>Radio frequency security researcher specializing in wireless protocol exploitation, SDR development, and signal analysis.</p>
+                    <br>
+                    <p>I intercept signals. I reverse protocols. I build tools that exploit vulnerabilities in the wireless spectrum.</p>
+                    <br>
+                    <p>Specializing in WiFi/Bluetooth exploitation, RFID/NFC hacking, satellite signal analysis, and custom SDR tools.</p>`,
+            tools: [
+                { name: '[REDACTED]', lang: 'COMING SOON', link: '#' },
+                { name: '[REDACTED]', lang: 'COMING SOON', link: '#' },
+                { name: '[REDACTED]', lang: 'COMING SOON', link: '#' },
+                { name: '[REDACTED]', lang: 'COMING SOON', link: '#' }
+            ],
+            toolsUsed: [
+                'gnuradio', 'gqrx', 'hackrf_tools', 'rtl_sdr', 'kismet', 'aircrack-ng', 
+                'bettercap', 'dump1090', 'inspectrum', 'iridium-ng'
+            ],
+            writeups: [
+                { date: 'TBD', title: '[WRITEUPS COMING SOON]', tags: [] }
+            ],
+            terminalCmds: [
+                { cmd: 'rf-swift start sdr-full', out: '[+] Container started — rf-swift-sdr', spectrum: null },
+                { cmd: 'hackrf_transfer -f 1575420000 -s 2M', out: 'Capturing GPS L1...', spectrum: { label: 'GPS L1', freq: '1575.42 MHz', type: 'gps' } },
+                { cmd: 'gqrx -f 14.200M', out: 'Tuning HF 20m band...', spectrum: { label: 'HF 20M SSB', freq: '14.200 MHz', type: 'hf' } },
+                { cmd: 'rtl_sdr -f 131.550M acars.raw', out: 'Decoding ACARS...', spectrum: { label: 'ACARS', freq: '131.550 MHz', type: 'acars' } },
+                { cmd: 'iridium-extractor -D 4', out: 'Extracting Iridium frames...', spectrum: { label: 'IRIDIUM', freq: '1626.00 MHz', type: 'iridium' } },
+                { cmd: 'hackrf_transfer -f 1545000000', out: 'Capturing Inmarsat-C...', spectrum: { label: 'INMARSAT-C', freq: '1545.00 MHz', type: 'inmarsat' } },
+                { cmd: 'gqrx -f 7.074M', out: 'Decoding FT8...', spectrum: { label: 'HF FT8', freq: '7.074 MHz', type: 'hf' } },
+                { cmd: 'rtl_sdr -f 129.125M', out: 'Monitoring ACARS alt freq...', spectrum: { label: 'ACARS', freq: '129.125 MHz', type: 'acars' } }
+            ]
+        };
+
+        function loadContent(mode) {
+            const content = mode === 'blue' ? blueContent : redContent;
+            
+            // Update hero
+            document.querySelector('.hero-subtitle').textContent = content.subtitle;
+            
+            // Update mode indicator
+            modeIndicator.textContent = mode === 'blue' ? '[ IP MODE ]' : '[ RF MODE ]';
+            modeIndicator.className = 'mode-indicator ' + (mode === 'blue' ? 'blue-mode' : 'red-mode');
+            
+            // Update tools
+            const toolsList = document.querySelector('.tools-list');
+            toolsList.innerHTML = content.tools.map(t => `
+                <div class="tool-item ${t.lang === 'COMING SOON' ? 'coming-soon' : ''}">
+                    <span class="tool-name">${t.name}</span>
+                    <span class="tool-meta">[${t.lang}]</span>
+                </div>
+            `).join('');
+            
+            // Update tools used
+            const toolsUsedEl = document.querySelector('.tools-used');
+            toolsUsedEl.innerHTML = content.toolsUsed.map(t => `<span class="tool-used-item">${t}</span>`).join('');
+            
+            // Update writeups
+            const writeupsList = document.querySelector('.writeups-list');
+            writeupsList.innerHTML = content.writeups.map(w => `
+                <div class="writeup-item">
+                    <span class="writeup-date">${w.date}</span>
+                    <div class="writeup-title">${w.title}</div>
+                    <div class="writeup-tags">
+                        ${w.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    </div>
+                </div>
+            `).join('');
+            
+            // Update terminal commands
+            terminalCommands.length = 0;
+            terminalCommands.push(...content.terminalCmds);
+        }
+
+        function selectPill(mode) {
+            currentMode = mode;
+            loadContent(mode);
+            
+            // Hide spectrum display when switching to IP mode
+            if (mode === 'blue') {
+                spectrumDisplay.classList.remove('active');
+                if (waveformInterval) clearInterval(waveformInterval);
+            }
+            
+            pillScreen.style.opacity = '0';
+            setTimeout(() => {
+                pillScreen.classList.add('hidden');
+                mainContent.classList.add('visible');
+            }, 500);
+        }
+
+        bluePill.addEventListener('click', () => selectPill('blue'));
+        redPill.addEventListener('click', () => selectPill('red'));
+
+        // SWITCH MODE BUTTON
+        document.getElementById('switchMode').addEventListener('click', () => {
+            mainContent.classList.remove('visible');
+            setTimeout(() => {
+                pillScreen.classList.remove('hidden');
+                pillScreen.style.opacity = '1';
+                pillScreen.classList.add('visible');
+                liveTerminal.innerHTML = '';
+                cmdIndex = 0;
+            }, 300);
+        });
+
+        // MATRIX RAIN
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+-=[]{}|;:<>?/~`';
+        const charArray = chars.split('');
+        const fontSize = 14;
+        let columns = Math.floor(canvas.width / fontSize);
+        let drops = Array(columns).fill(1);
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(10, 8, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#ffb000';
+            ctx.font = fontSize + 'px Share Tech Mono';
+
+            for (let i = 0; i < drops.length; i++) {
+                const char = charArray[Math.floor(Math.random() * charArray.length)];
+                const x = i * fontSize;
+                const y = drops[i] * fontSize;
+                
+                ctx.globalAlpha = Math.random() * 0.5 + 0.1;
+                ctx.fillText(char, x, y);
+                ctx.globalAlpha = 1;
+
+                if (y > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        setInterval(drawMatrix, 50);
+
+        // LIVE TERMINAL OUTPUT
+        const terminalCommands = [];
+
+        const liveTerminal = document.getElementById('liveTerminal');
+        let cmdIndex = 0;
+
+        let currentMode = 'blue';
+        let waveformInterval = null;
+        const spectrumDisplay = document.getElementById('spectrumDisplay');
+        const spectrumLabel = document.getElementById('spectrumLabel');
+        const spectrumFreq = document.getElementById('spectrumFreq');
+        const waveformEl = document.getElementById('waveform');
+
+        // Create waveform bars
+        for (let i = 0; i < 60; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'waveform-bar';
+            bar.style.height = '5px';
+            waveformEl.appendChild(bar);
+        }
+
+        function animateWaveform(type) {
+            const bars = waveformEl.querySelectorAll('.waveform-bar');
+            
+            if (waveformInterval) clearInterval(waveformInterval);
+            
+            waveformInterval = setInterval(() => {
+                bars.forEach((bar, i) => {
+                    let height;
+                    const noise = Math.random() * 5;
+                    
+                    if (type === 'gps') {
+                        // GPS: strong center signal
+                        const center = bars.length / 2;
+                        const dist = Math.abs(i - center);
+                        height = Math.max(5, 30 - dist * 1.5 + noise);
+                    } else if (type === 'hf') {
+                        // HF: multiple peaks, noisy
+                        height = 5 + Math.sin(i * 0.3 + Date.now() * 0.005) * 10 + noise * 2;
+                    } else if (type === 'acars') {
+                        // ACARS: bursty, periodic spikes
+                        const burst = (Date.now() % 1000 < 200) ? 25 : 0;
+                        height = 5 + (i % 8 === 0 ? burst : 0) + noise;
+                    } else if (type === 'iridium') {
+                        // Iridium: fast moving signals
+                        const offset = (Date.now() * 0.02) % bars.length;
+                        const dist = Math.abs((i - offset + bars.length) % bars.length);
+                        height = dist < 5 ? 25 + noise : 5 + noise;
+                    } else if (type === 'inmarsat') {
+                        // Inmarsat: wide stable signal
+                        const center = bars.length / 2;
+                        const dist = Math.abs(i - center);
+                        height = dist < 15 ? 20 + noise : 5 + noise;
+                    } else {
+                        height = 5 + noise;
+                    }
+                    
+                    bar.style.height = Math.min(35, Math.max(3, height)) + 'px';
+                });
+            }, 50);
+        }
+
+        function showSpectrum(spectrum) {
+            if (spectrum && currentMode === 'red') {
+                spectrumLabel.textContent = spectrum.label;
+                spectrumFreq.textContent = spectrum.freq;
+                spectrumDisplay.classList.add('active');
+                animateWaveform(spectrum.type);
+            } else {
+                spectrumDisplay.classList.remove('active');
+                if (waveformInterval) clearInterval(waveformInterval);
+            }
+        }
+
+        function addTerminalLine() {
+            if (terminalCommands.length === 0) return;
+            const item = terminalCommands[cmdIndex % terminalCommands.length];
+            const prompt = currentMode === 'blue' ? 'root@exegol:~#' : 'root@rf-swift:~#';
+            const line = document.createElement('div');
+            line.innerHTML = `<span class="cmd">${prompt} ${item.cmd}</span>`;
+            liveTerminal.appendChild(line);
+            
+            setTimeout(() => {
+                const outLine = document.createElement('div');
+                outLine.innerHTML = `<span class="success">${item.out}</span>`;
+                liveTerminal.appendChild(outLine);
+                
+                // Show spectrum for RF commands
+                if (item.spectrum) {
+                    showSpectrum(item.spectrum);
+                }
+                
+                while (liveTerminal.children.length > 4) {
+                    liveTerminal.removeChild(liveTerminal.firstChild);
+                }
+            }, 500);
+            
+            cmdIndex++;
+        }
+
+        setInterval(addTerminalLine, 3000);
+
+        // SYSTEM TIME
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('sysTime').textContent = now.toTimeString().split(' ')[0];
+            document.getElementById('sysLoad').textContent = (Math.random() * 2 + 0.1).toFixed(2);
+            document.getElementById('memUsage').textContent = (Math.random() * 4 + 1).toFixed(1) + 'GB';
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // DATA STREAM
+        const dataStream = document.getElementById('dataStream');
+        function updateDataStream() {
+            let str = '';
+            for (let i = 0; i < 50; i++) {
+                str += Math.random().toString(16).substr(2, 2).toUpperCase();
+            }
+            dataStream.textContent = str;
+        }
+        setInterval(updateDataStream, 100);
+
+        // ASCII ART
+        document.getElementById('asciiArt').textContent = pillAsciiArt;
+
+        // IRIG-B TIME FORMAT (DDD:HH:MM:SS - day of year)
+        function updateUptime() {
+            const now = new Date();
+            const start = new Date(now.getFullYear(), 0, 0);
+            const diff = now - start;
+            const oneDay = 1000 * 60 * 60 * 24;
+            const dayOfYear = Math.floor(diff / oneDay);
+
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+
+            const pad = (n, len = 2) => String(n).padStart(len, '0');
+            document.getElementById('uptimeCounter').textContent = 
+                `${pad(dayOfYear, 3)}:${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+        }
+
+        updateUptime();
+        setInterval(updateUptime, 1000);
+    </script>
+</body>
+</html>
