@@ -1182,7 +1182,7 @@
                 'bettercap', 'dump1090', 'inspectrum', 'iridium-ng'
             ],
             writeups: [
-                { date: 'TBD', title: '[WRITEUPS COMING SOON]', tags: [] }
+                { date: '2026.07.16', title: 'iOS GPS LOCATION SIMULATOR', tags: ['GNSS', 'iOS', 'TOOL'], link: 'writeups/ios-gps-simulator/index.html' }
             ],
             terminalCmds: [
                 { cmd: 'rf-swift start sdr-full', out: '[+] Container started — rf-swift-sdr', spectrum: null },
@@ -1221,15 +1221,17 @@
             
             // Update writeups
             const writeupsList = document.querySelector('.writeups-list');
-            writeupsList.innerHTML = content.writeups.map(w => `
-                <div class="writeup-item">
+            writeupsList.innerHTML = content.writeups.map(w => {
+                const inner = `
                     <span class="writeup-date">${w.date}</span>
                     <div class="writeup-title">${w.title}</div>
                     <div class="writeup-tags">
                         ${w.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-                    </div>
-                </div>
-            `).join('');
+                    </div>`;
+                return w.link
+                    ? `<a class="writeup-item" href="${w.link}" style="display:block;text-decoration:none;color:inherit;">${inner}</a>`
+                    : `<div class="writeup-item">${inner}</div>`;
+            }).join('');
             
             // Update terminal commands
             terminalCommands.length = 0;

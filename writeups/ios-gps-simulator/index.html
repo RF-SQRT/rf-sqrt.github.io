@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iOS GPS LOCATION SIMULATOR // RF-SQRT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --amber:#ffb000; --amber-bright:#ffc832; --amber-dim:#cc8800;
+    --amber-dark:#664400; --amber-glow:#ffb00066; --bg:#0a0800; --bg-light:#1a1200;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background-color:var(--bg); color:var(--amber);
+    font-family:'Share Tech Mono','Courier New',monospace;
+    line-height:1.7; font-size:16px; letter-spacing:.3px;
+    min-height:100vh; overflow-x:hidden;
+  }
+  /* CRT scanlines + vignette */
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:9;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,0.15) 0px, rgba(0,0,0,0.15) 1px, transparent 1px, transparent 3px);
+  }
+  body::after{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:8;
+    background:radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.55) 100%);
+  }
+  .wrap{max-width:820px; margin:0 auto; padding:2.5rem 1.25rem 5rem; position:relative; z-index:10;}
+  a{color:var(--amber-bright); text-decoration:none; border-bottom:1px dotted var(--amber-dark);}
+  a:hover{color:#fff; text-shadow:0 0 8px var(--amber-glow);}
+  .back{font-size:.85rem; color:var(--amber-dim);}
+  .titlebar{border-bottom:1px solid var(--amber-dark); padding-bottom:1.2rem; margin:1.5rem 0 2rem;}
+  h1{
+    font-family:'VT323',monospace; font-size:2.8rem; line-height:1; margin:.4rem 0 .6rem;
+    color:var(--amber-bright); text-shadow:0 0 12px var(--amber-glow); letter-spacing:1px;
+  }
+  .subtitle{color:var(--amber-dim); font-size:1rem; margin:0;}
+  .meta-line{color:var(--amber-dim); font-size:.8rem; margin-top:.8rem;}
+  .badge{
+    display:inline-block; border:1px solid var(--amber-dark); color:var(--amber);
+    padding:.1rem .55rem; margin:.15rem .3rem .15rem 0; font-size:.72rem; border-radius:2px;
+    background:rgba(0,0,0,.3);
+  }
+  h2{
+    font-family:'VT323',monospace; font-size:1.7rem; color:var(--amber-bright);
+    margin:2.6rem 0 .8rem; letter-spacing:1px;
+  }
+  h2::before{content:"> "; color:var(--amber-dim);}
+  p{margin:0 0 1rem;}
+  ul{padding-left:1.1rem;} li{margin-bottom:.6rem;}
+  li::marker{color:var(--amber-dim);}
+  code{
+    background:var(--bg-light); border:1px solid var(--amber-dark); color:var(--amber-bright);
+    padding:.05em .4em; border-radius:2px; font-size:.9em;
+  }
+  .panel{
+    border:1px solid var(--amber-dark); background:rgba(0,0,0,.35);
+    padding:1rem 1.2rem; margin:0 0 1.2rem; overflow-x:auto;
+    color:var(--amber-dim); font-size:.85rem; line-height:1.6; white-space:pre;
+  }
+  .note{
+    border-left:3px solid var(--amber-dark); padding:.4rem 0 .4rem 1rem; margin:0 0 1.1rem;
+  }
+  .note b{color:var(--amber-bright); display:block; margin-bottom:.15rem;}
+  .disclaimer{
+    border:1px solid var(--amber-dark); background:var(--bg-light);
+    padding:1rem 1.2rem; font-size:.85rem; color:var(--amber-dim); margin-top:2.5rem;
+  }
+  footer{margin-top:3rem; padding-top:1.3rem; border-top:1px solid var(--amber-dark);
+    color:var(--amber-dim); font-size:.8rem; display:flex; gap:1.4rem; flex-wrap:wrap;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="../../index.html">[ ← BACK TO INDEX ]</a>
+
+    <div class="titlebar">
+      <p class="subtitle">RF MODE // GNSS</p>
+      <h1>iOS GPS LOCATION SIMULATOR</h1>
+      <p class="subtitle">Driving a real iPhone's reported position from a browser map — and learning exactly how iOS exposes a simulated fix.</p>
+      <div class="meta-line">
+        <span class="badge">PYTHON</span><span class="badge">FLASK</span><span class="badge">pymobiledevice3</span><span class="badge">RemoteXPC</span><span class="badge">CoreLocation</span><span class="badge">GNSS / L1</span><span class="badge">iOS 17+</span>
+      </div>
+    </div>
+
+    <h2>SUMMARY</h2>
+    <p>A small Flask app with a Leaflet map front-end that injects a simulated GPS location onto a
+    USB-connected iPhone and walks it along real streets at a set pace. Click a point to teleport, draw a
+    multi-point circuit, or replay a GPX track; live position streams back to the map over SSE. Built to
+    experiment with location-based apps on hardware I own — and mostly an excuse to reverse how iOS 17+
+    developer tunneling and CoreLocation source-tagging actually work.</p>
+
+    <h2>ARCHITECTURE</h2>
+    <div class="panel">browser map (Leaflet) ──HTTP / SSE──▶ Flask app
+      │
+      ▼
+movement engine  ── walk waypoints · Gaussian GPS jitter · 2 Hz tick
+      │
+      ▼
+pymobiledevice3 LocationSimulation ──RemoteXPC tunnel──▶ iPhone</div>
+    <p>Great-circle math (haversine / bearing / step-along-bearing) moves the position between waypoints.
+    The engine ticks twice a second so iOS sees a steady stream of fixes and derives speed and course from
+    the cadence. A clean navigation path is tracked separately from the jittered position that's actually
+    reported, so the underlying route stays exact while the reported fix wobbles like a real receiver.</p>
+
+    <h2>WHAT I ACTUALLY MESSED WITH</h2>
+    <div class="note"><b>iOS 17+ moved everything behind a tunnel.</b>
+      Modern iOS runs developer services over a RemoteXPC tunnel that needs a root <code>tunneld</code>
+      process to bring up the network interface. Getting a stable DVT/instruments session over that tunnel
+      was the bulk of the work.</div>
+    <div class="note"><b>The invisible Developer Mode toggle.</b>
+      <code>Settings → Privacy &amp; Security → Developer Mode</code> simply does not exist until a
+      developer tool pokes the device the right way — <code>pymobiledevice3 amfi reveal-developer-mode</code>
+      is what makes the switch appear. A plain USB/lockdown connection isn't enough on current iOS.</div>
+    <div class="note"><b>A moving-target library.</b>
+      The whole DVT / location API went async across <code>pymobiledevice3</code> releases, so I bridged the
+      async device calls onto a background event loop to keep the engine's tick loop synchronous.</div>
+    <div class="note"><b>iOS knows it's fake — by design, and that's the interesting part.</b>
+      No amount of realistic pathing hides a software-simulated location, because iOS stamps every injected
+      fix with <code>CLLocationSourceInformation.isSimulatedBySoftware = true</code>. The flag comes from the
+      OS, not the coordinates — a clean, honest signal any app can read. The only ways to produce an
+      <em>unflagged</em> fix are RF-level GNSS spoofing (transmitting L1 — regulated spectrum) or OS-level
+      hooks. Good reminder that the robust anti-spoof check is the source flag plus a motion-sensor
+      cross-check, not coordinate realism.</div>
+
+    <h2>STACK</h2>
+    <ul>
+      <li>Python · Flask · Server-Sent Events for the live feed</li>
+      <li>pymobiledevice3 (RemoteXPC tunnel, DVT LocationSimulation)</li>
+      <li>Leaflet map UI · GPX import · Docker packaging</li>
+    </ul>
+
+    <div class="disclaimer">
+      Built and tested strictly on hardware I own, for understanding how iOS surfaces a simulated location to
+      apps and how to detect it. Not for defeating third-party location or anti-fraud controls.
+    </div>
+
+    <footer>
+      <!-- swap USERNAME/REPO for the real source link -->
+      <a href="https://github.com/RF-SQRT">[ GITHUB ]</a>
+      <a href="../../index.html">[ INDEX ]</a>
+      <span>built with python &amp; pymobiledevice3</span>
+    </footer>
+  </div>
+</body>
+</html>
